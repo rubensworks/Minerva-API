@@ -7,6 +7,7 @@ class Minerva
 {
 	public $urls=array(	"login"				=>	"https://minerva.ugent.be/secure/index.php?external=true",
 						"home"				=>	"https://minerva.ugent.be/index.php",
+						"profile"			=>	"http://minerva.ugent.be/main/auth/profile.php",
 						"baseUrl"			=>	"https://minerva.ugent.be/",
 						"documents"			=>	"https://minerva.ugent.be/main/document/document.php?cidReq=",
 						"documentsBaseUrl"	=>	"https://minerva.ugent.be/main/document/",
@@ -19,6 +20,11 @@ class Minerva
 	
 	//cached files
 	public $courses;
+	public $id;
+	public $fname;
+	public $lname;
+	public $email;
+	public $lang;
 	
 	/**
 	 *	Return Minerva object, call this as static
@@ -64,7 +70,9 @@ class Minerva
 			throw new Exception('User is not yet authenticated.');
 		if(!$this->inited) {
 			$this->fetchCourses();
+			$this->fetchProfile();
 		}
+		$this->inited=true;
 	}
 	
 	/**
@@ -95,6 +103,87 @@ class Minerva
 		}
 		$this->courses=$data;
 	}
+	
+	/**
+	 *	Fetch the user info
+	 */
+	public function fetchProfile() {
+		$page=$this->getPage($this->urls["profile"]);
+		
+		$e=explode("<input type=\"hidden\" name=\"official_code\" value=\"",$page);
+		$e=explode("\" />",$e[1]);
+		$this->id=$e[0];
+		
+		$e=explode("<input type=\"hidden\" name=\"email\" value=\"",$page);
+		$e=explode("\" />",$e[1]);
+		$this->email=$e[0];
+		
+		$e=explode("<input type=\"hidden\" name=\"firstname\" value=\"",$page);
+		$e=explode("\" />",$e[1]);
+		$this->fname=$e[0];
+		
+		$e=explode("<input type=\"hidden\" name=\"lastname\" value=\"",$page);
+		$e=explode("\" />",$e[1]);
+		$this->lname=$e[0];
+		
+		$e=explode("<option value=\"dutch\" selected=\"selected\">",$page);
+		$e=explode("</option>",$e[1]);
+		$this->lang=$e[0];
+	}
+	
+	/**
+	 *	Get user id
+	 */
+	public function getUserId() {
+		if(!$this->inited)
+			$this->init();
+		return $this->id;
+	}
+	
+	/**
+	 *	Get username
+	 */
+	public function getUsername() {
+		return $this->username;
+	}
+	
+	/**
+	 *	Get user first name
+	 */
+	public function getUserFirstName() {
+		if(!$this->inited)
+			$this->init();
+		return $this->fname;
+	}
+
+
+	/**
+	 *	Get user last name
+	 */
+	public function getUserLastName() {
+		if(!$this->inited)
+			$this->init();
+		return $this->lname;
+	}
+	
+	/**
+	 *	Get user email
+	 */
+	public function getUserEmail() {
+		if(!$this->inited)
+			$this->init();
+		return $this->email;
+	}
+	
+	/**
+	 *	Get user language
+	 */
+	public function getUserLanguage() {
+		if(!$this->inited)
+			$this->init();
+		return $this->lang;
+	}
+
 	
 	/**
 	 *	Show the courses (array of array(cid,coursename))
