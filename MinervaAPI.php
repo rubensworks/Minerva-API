@@ -69,6 +69,7 @@ class Minerva
 	 *	Gives back a salt to log in with
 	 */
 	public static function getSalt() {
+		$minerva=new Minerva();
 		//retreive salt
 		$ch = curl_init($minerva->urls["login"]);//<-- <input type="hidden" name="authentication_salt" value="a415d3dbcfef8b2f57e92e340a50b81f" />
 		curl_setopt($ch, CURLOPT_HEADER, 0);
