@@ -7,7 +7,7 @@ class Minerva
 {
 	public $urls=array(	"login"				=>	"https://minerva.ugent.be/secure/index.php?external=true",
 						"home"				=>	"https://minerva.ugent.be/index.php",
-						"profile"			=>	"http://minerva.ugent.be/main/auth/profile.php",
+						"profile"			=>	"https://minerva.ugent.be/main/auth/profile.php",
 						"baseUrl"			=>	"https://minerva.ugent.be/",
 						"documents"			=>	"https://minerva.ugent.be/main/document/document.php?cidReq=",
 						"documentsBaseUrl"	=>	"https://minerva.ugent.be/main/document/",
@@ -35,17 +35,8 @@ class Minerva
 		$minerva->username=$username;
 		$minerva->ckfile=tempnam ("/cookies", "C_".$username);
 		
-		//retreive salt
-		$ch = curl_init($minerva->urls["login"]);//<-- <input type="hidden" name="authentication_salt" value="a415d3dbcfef8b2f57e92e340a50b81f" />
-		curl_setopt($ch, CURLOPT_HEADER, 0);
-		curl_setopt($ch, CURLOPT_COOKIEJAR, $minerva->ckfile); 
-    	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		$saltPage=curl_exec($ch);
-		curl_close ($ch);
-		
-		$startMatch="<input type=\"hidden\" name=\"authentication_salt\" value=\"";
-		$salt=substr($saltPage,strpos($saltPage,$startMatch)+strlen($startMatch),32);
-		//echo $salt;
+		//get salt
+		$salt=Minerva::getSalt();
 		
 		//auth
 		$ch = curl_init($minerva->urls["login"]);
@@ -60,6 +51,36 @@ class Minerva
 		$minerva->auth=true;
 		
 		return $minerva;
+	}
+	
+	/**
+	 *	Show cookie content
+	 */
+	public function getCookie() {
+		if(!file_exists($this->ckfile))
+			return "";
+		$fh = fopen($this->ckfile, 'r');
+		$cookie = fread($fh, filesize($this->ckfile));
+		fclose($fh);
+		return $cookie;
+	}
+	
+	/**
+	 *	Gives back a salt to log in with
+	 */
+	public static function getSalt() {
+		//retreive salt
+		$ch = curl_init($minerva->urls["login"]);//<-- <input type="hidden" name="authentication_salt" value="a415d3dbcfef8b2f57e92e340a50b81f" />
+		curl_setopt($ch, CURLOPT_HEADER, 0);
+		//curl_setopt($ch, CURLOPT_COOKIEJAR, $minerva->ckfile);  //cookie not needed while getting salt
+    	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		$saltPage=curl_exec($ch);
+		curl_close ($ch);
+		
+		$startMatch="<input type=\"hidden\" name=\"authentication_salt\" value=\"";
+		$salt=substr($saltPage,strpos($saltPage,$startMatch)+strlen($startMatch),32);
+		//echo $salt;
+		return $salt;
 	}
 	
 	/**
