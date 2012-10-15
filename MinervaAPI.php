@@ -2,6 +2,7 @@
 /**
  *	This class enables users to connect to Minerva and get a variety of info
  * 	Based on https://github.com/FelixVanderJeugt/minerva-syncer/blob/master/script.sh
+ * 	This class can also be used in single-request mode by first using auth()
  */
 class Minerva
 {
@@ -27,30 +28,54 @@ class Minerva
 	public $lang;
 	
 	/**
-	 *	Return Minerva object, call this as static
+	 *	Defines Minerva object by logging in
 	 */
-	public static function login($username, $password) {
+	public function login($username, $password) {
 		
-		$minerva=new Minerva();
-		$minerva->username=$username;
-		$minerva->ckfile=tempnam ("/cookies", "C_".$username);
+		//$this=new Minerva();
+		$this->username=$username;
+		$this->ckfile=tempnam ("/cookies", "C_".$username);
 		
 		//get salt
 		$salt=Minerva::getSalt();
 		
 		//auth
-		$ch = curl_init($minerva->urls["login"]);
+		$ch = curl_init($this->urls["login"]);
 		curl_setopt($ch, CURLOPT_POSTFIELDS,  "login=$username&password=$password&authentication_salt=$salt&submitAuth=Log in");
-		curl_setopt($ch, CURLOPT_COOKIEFILE, $minerva->ckfile); 
-		curl_setopt($ch, CURLOPT_COOKIEJAR, $minerva->ckfile); 
+		curl_setopt($ch, CURLOPT_COOKIEFILE, $this->ckfile); 
+		curl_setopt($ch, CURLOPT_COOKIEJAR, $this->ckfile); 
 		curl_setopt($ch, CURLOPT_HEADER, 0);
     	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		$out=curl_exec($ch);
 		curl_close ($ch);
 		
-		$minerva->auth=true;
+		$this->auth=true;
+		$this->fetchProfile();
+		$this->auth=$this->fname!="";
 		
-		return $minerva;
+		echo $this->getCookie();
+		
+		//return $minerva;
+		return $this->auth;
+	}
+	
+	/**
+	 *	Defines Minerva object by authenticating with the cookie data
+	 */
+	public function auth($username,$cookie) {
+		
+		//$this=new Minerva();
+		//$minerva->username=$username;
+		$this->username=$username;
+		$this->ckfile=tempnam ("/cookies", "C_".$username);
+		$this->setCookie("minerva.ugent.be	FALSE	/	FALSE	0	mnrv_sid	$cookie
+minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
+		
+		$this->auth=true;
+		$this->fetchProfile();
+		$this->auth=$this->fname!="";
+		
+		return $this->auth;
 	}
 	
 	/**
@@ -63,6 +88,14 @@ class Minerva
 		$cookie = fread($fh, filesize($this->ckfile));
 		fclose($fh);
 		return $cookie;
+	}
+	
+	/**
+	 *	Set cookie content
+	 */
+	public function setCookie($value) {
+		$fh = fopen($this->ckfile, 'w') or die("can't open file");
+		fwrite($fh, $value);
 	}
 	
 	/**
