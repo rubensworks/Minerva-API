@@ -11,6 +11,7 @@ class Minerva
 						"profile"			=>	"https://minerva.ugent.be/main/auth/profile.php",
 						"baseUrl"			=>	"https://minerva.ugent.be/",
 						"documents"			=>	"https://minerva.ugent.be/main/document/document.php?cidReq=",
+						"documentsSubdir"	=>	"&curdirpath=",
 						"documentsBaseUrl"	=>	"https://minerva.ugent.be/main/document/",
 						);
 	
@@ -122,7 +123,7 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 	 */
 	public function init() {
 		if(!$this->auth)
-			throw new Exception('User is not yet authenticated.');
+			throw new Exception('Authentication failed.');
 		if(!$this->inited) {
 			$this->fetchCourses();
 			$this->fetchProfile();
@@ -154,7 +155,7 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 		foreach ($matches[0] as $k=>$m) {
 			$e=explode("\">",$m);
 			$cid=explode("?cidReq=",$e[0]);
-			$data[$k]=array("cid"=>$cid[1],"name"=>substr_replace($e[1],"",-1));
+			$data[$k]=array("course"=>array("cid"=>$cid[1],"name"=>substr_replace($e[1],"",-1)));
 		}
 		$this->courses=$data;
 	}
@@ -192,14 +193,14 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 	public function getUserId() {
 		if(!$this->inited)
 			$this->init();
-		return $this->id;
+		return array("userId"=>$this->id);
 	}
 	
 	/**
 	 *	Get username
 	 */
 	public function getUsername() {
-		return $this->username;
+		return array("username"=>$this->username);
 	}
 	
 	/**
@@ -208,7 +209,7 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 	public function getUserFirstName() {
 		if(!$this->inited)
 			$this->init();
-		return $this->fname;
+		return array("userFirstName"=>$this->fname);
 	}
 
 
@@ -218,7 +219,7 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 	public function getUserLastName() {
 		if(!$this->inited)
 			$this->init();
-		return $this->lname;
+		return array("userLastName"=>$this->lname);
 	}
 	
 	/**
@@ -227,7 +228,7 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 	public function getUserEmail() {
 		if(!$this->inited)
 			$this->init();
-		return $this->email;
+		return array("userEmail"=>$this->email);
 	}
 	
 	/**
@@ -236,7 +237,7 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 	public function getUserLanguage() {
 		if(!$this->inited)
 			$this->init();
-		return $this->lang;
+		return array("userLanguage"=>$this->lang);
 	}
 
 	
@@ -246,16 +247,16 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 	public function getCourses() {
 		if(!$this->inited)
 			$this->init();
-		return $this->courses;
+		return array("courses"=>$this->courses);
 	}
 	
 	/**
 	 *	Get the documents of a course
 	 */
-	public function getCourseDocuments($cid) {
+	public function getCourseDocuments($cid,$subfolder="") {
 		if(!$this->inited)
 			$this->init();
-		return $this->makeDocumentList($this->urls["documents"].$cid);
+		return array("documents"=>$this->makeDocumentList($this->urls["documents"].$cid.($subfolder==""?"":($this->urls["documentsSubdir"].$subfolder))));
 	}
 	
 	/**
@@ -279,6 +280,8 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 				$type=$ns2[0];
 				
 				$n1=explode("<span><a href=\"",$lines[2]);
+				
+				$n1[1]=preg_replace("/\s\s+/"," ",$n1[1]);
 				$n2=explode("\" id=\"",$n1[1]);
 				$link=$n2[0];
 				$n3=explode("\">",$n2[1]);
@@ -293,16 +296,19 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 				$ns2=explode("</td>",$ns1[1]);
 				$date=$ns2[0];
 				
-				$data[$k-1]=array(	"type"		=>	$type,
-									"link"		=>	$this->urls["documentsBaseUrl"].$link,
+				$data[$k-1]=array("document"=>array(	"type"		=>	$type,
+									"link"		=>	$this->urls["documentsBaseUrl"].htmlspecialchars($link),
 									"id"		=>	$id,
 									"name"		=>	$name,
 									"download"	=>	$this->urls["baseUrl"].$download,
 									"date"		=>	$date,
-								);
+								));
 
 				if($type=="directory") {
-					//$data[$k-1]["subfolder"]=$this->makeDocumentList($this->urls["documentsBaseUrl"].$link);
+					//main/document/document.php?cidReq=E00862002012&amp;amp;curdirpath=%2F1_Theory
+					$n1=explode("curdirpath=",$link);
+					$subfolder=$n1[1];
+					$data[$k-1]["document"]["subfolder"]=$subfolder;
 				}
 			}
 		}
