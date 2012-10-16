@@ -42,7 +42,7 @@ class Minerva
 		
 		//auth
 		$ch = curl_init($this->urls["login"]);
-		curl_setopt($ch, CURLOPT_POSTFIELDS,  "login=$username&password=$password&authentication_salt=$salt&submitAuth=Log in");
+		curl_setopt($ch, CURLOPT_POSTFIELDS,  "login=$username&password=$password&authentication_salt=".$salt["salt"]."&submitAuth=Log in");
 		curl_setopt($ch, CURLOPT_COOKIEFILE, $this->ckfile); 
 		curl_setopt($ch, CURLOPT_COOKIEJAR, $this->ckfile); 
 		curl_setopt($ch, CURLOPT_HEADER, 0);
@@ -57,7 +57,8 @@ class Minerva
 		echo $this->getCookie();
 		
 		//return $minerva;
-		return $this->auth;
+		//return $this->auth;
+		return array("authenticated"=>$this->auth?1:0);
 	}
 	
 	/**
@@ -76,7 +77,7 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 		$this->fetchProfile();
 		$this->auth=$this->fname!="";
 		
-		return $this->auth;
+		return array("authenticated"=>$this->auth?1:0);
 	}
 	
 	/**
@@ -115,7 +116,7 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 		$startMatch="<input type=\"hidden\" name=\"authentication_salt\" value=\"";
 		$salt=substr($saltPage,strpos($saltPage,$startMatch)+strlen($startMatch),32);
 		//echo $salt;
-		return $salt;
+		return array("salt"=>$salt);
 	}
 	
 	/**
@@ -123,7 +124,7 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 	 */
 	public function init() {
 		if(!$this->auth)
-			throw new Exception('Authentication failed.');
+			throw new CHttpException('1000','Authentication failed.');
 		if(!$this->inited) {
 			$this->fetchCourses();
 			$this->fetchProfile();
