@@ -1,0 +1,3 @@
+This API can get data from (UGent) Minerva by signing in with your username and password,
+or by authenticating with your username and session id (that has been created on an other location).
+The purpose of this API is to run an XML REST API server ( http://minerva.rubensworks.net/site/documentation ) on.
