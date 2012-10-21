@@ -6,18 +6,22 @@
  */
 class Minerva
 {
-	public $urls=array(	"login"				=>	"https://minerva.ugent.be/secure/index.php?external=true",
-						"home"				=>	"https://minerva.ugent.be/index.php",
-						"profile"			=>	"https://minerva.ugent.be/main/auth/profile.php",
-						"baseUrl"			=>	"https://minerva.ugent.be/",
-						"documents"			=>	"https://minerva.ugent.be/main/document/document.php?cidReq=",
-						"documentsSubdir"	=>	"&curdirpath=",
-						"documentsBaseUrl"	=>	"https://minerva.ugent.be/main/document/",
+	public $urls=array(	"login"					=>	"https://minerva.ugent.be/secure/index.php?external=true",
+						"home"					=>	"https://minerva.ugent.be/index.php",
+						"profile"				=>	"https://minerva.ugent.be/main/auth/profile.php",
+						"baseUrl"				=>	"https://minerva.ugent.be/",
+						"documents"				=>	"https://minerva.ugent.be/main/document/document.php?cidReq=",
+						"documentsSubdir"		=>	"&curdirpath=",
+						"documentsBaseUrl"		=>	"https://minerva.ugent.be/main/document/",
+						"announcements"			=>	"https://minerva.ugent.be/main/announcements/announcements.php?cidReq=",
+						"announcementsPerPage"	=>	"&per_page=",
+						"announcementsPageNr"	=>	"&page_nr=",
 						);
 	
 	public $username;
 	public $auth=false;
 	public $inited=false;
+	public $singlemode=false;
 	public $ckfile;
 	
 	//cached files
@@ -51,6 +55,7 @@ class Minerva
 		curl_close ($ch);
 		
 		$this->auth=true;
+		$this->singlemode=false;
 		$this->fetchProfile();
 		$this->auth=$this->fname!="";
 		
@@ -74,6 +79,7 @@ class Minerva
 minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 		
 		$this->auth=true;
+		$this->singlemode=true;
 		$this->fetchProfile();
 		$this->auth=$this->fname!="";
 		
@@ -125,7 +131,7 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 	public function init() {
 		if(!$this->auth)
 			throw new CHttpException('1000','Authentication failed.');
-		if(!$this->inited) {
+		if(!$this->inited && !$this->singlemode) {
 			$this->fetchCourses();
 			$this->fetchProfile();
 		}
@@ -248,6 +254,8 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 	public function getCourses() {
 		if(!$this->inited)
 			$this->init();
+		if($this->singlemode)
+			$this->fetchCourses();
 		return array("courses"=>$this->courses);
 	}
 	
@@ -314,6 +322,58 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 			}
 		}
 		return $data;
+	}
+	
+	/**
+	 *	Get the announcements of a course
+	 */
+	public function getAnnouncements($cid,$page=1,$perpage=20) {
+		if(!$this->inited)
+			$this->init();
+		$c=$this->getPage($this->urls["announcements"].$cid.$this->urls["announcementsPageNr"].$page.$this->urls["announcementsPerPage"].$perpage);
+		preg_match("/\<form action=\"announcements.php\?per_page=$perpage&page_nr=$page\" method=\"post\">(.*)<\/form>/msU",$c,$match);
+		preg_match_all("/<div class=\"announcement \">(.*)<\/div><\/div>/msU",$match[0],$matches);
+		
+		$data=array();
+		
+		foreach ($matches[0] as $m) {
+			$id=$this->getContent("name=\"id[]\" value=\"","\" class=\"announcement_actions\" onclick=\"unlockmultipleactions('id[]');\">",$m);
+			$title=$this->getContent("\" class=\"announcement_actions\" onclick=\"unlockmultipleactions('id[]');\">","</div>",$m);
+			$visibility=$this->getContent(" <select name=\"sent to\"><option value=\"\">","</option></select>",$m);
+			$created=$this->getContent("</option></select><span class=\"right invisible\">","<br /></span></div><div class=\"visible\">",$m);
+			$content=$this->getContent("<br /></span></div><div class=\"visible\">","</div></div>",$m);
+			
+			$data[]=array("announcement"=>array(
+											"id"=>$id,
+											"title"=>utf8_encode(htmlentities($title)),
+											"visibility"=>$visibility,
+											"created"=>$created,
+											"content"=>$content,
+			));
+		}
+		
+		preg_match("/\<div id=\"users_table_top_right\" class=\"dataTables_filter\">(.*)<\/div>/msU",$c,$match);
+		//echo $match[0];
+		$posts=$this->getContent("<span class=\"left\">","</span>",$match[0]);
+		$posts=explode("/ ",$posts);
+		
+		$pageing=array(	"page"		=>	$page,
+						"perpage"	=>	$perpage,
+						"posts"		=>	$posts[1],
+						);
+		
+		//also return total #posts, current page, perpage
+		return array(	"announcements"	=>	$data,
+						"pageing"		=>	$pageing,);
+	}
+	
+	/**
+	 *	Gets the content of a tag
+	 */
+	public function getContent($start, $end, $search) {
+		$n1=explode($start,$search);
+		$n2=explode($end,$n1[1]);
+		return $n2[0];
 	}
 	
 	/**
