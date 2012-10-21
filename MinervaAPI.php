@@ -10,6 +10,7 @@ class Minerva
 						"home"					=>	"https://minerva.ugent.be/index.php",
 						"profile"				=>	"https://minerva.ugent.be/main/auth/profile.php",
 						"baseUrl"				=>	"https://minerva.ugent.be/",
+						"courseHome"			=>	"https://minerva.ugent.be/main/course_home/course_home.php?gidReset=1&cidReq=",
 						"documents"				=>	"https://minerva.ugent.be/main/document/document.php?cidReq=",
 						"documentsSubdir"		=>	"&curdirpath=",
 						"documentsBaseUrl"		=>	"https://minerva.ugent.be/main/document/",
@@ -257,6 +258,37 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 		if($this->singlemode)
 			$this->fetchCourses();
 		return array("courses"=>$this->courses);
+	}
+	
+	/**
+	 *	Get the tools of a course
+	 */
+	public function getTools($cid) {
+		if(!$this->inited)
+			$this->init();
+		$c=$this->getPage($this->urls["courseHome"].$cid);
+		preg_match("/\<div id=\"tools\">(.*)<div id=\"homepagelinks/msU",$c,$match);
+		preg_match_all("/<div id=\"tool_(.*)<\/div>/msU",$match[0],$matches);
+		
+		$data=array();
+		
+		foreach ($matches[0] as $m) {
+			
+			$name=$this->getContent("<div id=\"tool_","\" class",$m);
+			$enabled=$this->getContent("class=\"tool ","row",$m);
+						
+			$data[]=array("announcement"=>array(
+											"name"		=>$name,
+											"enabled"	=>$enabled==""?1:0,
+			));
+		}
+		
+		$intro=$this->getContent("<div id=\"courseintro\">","</div>",$c);
+		
+		//also return course intro
+		return array(	"intro"=>$intro,
+						"tools"=>$data,
+						);
 	}
 	
 	/**
