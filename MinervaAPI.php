@@ -277,7 +277,7 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 			$name=$this->getContent("<div id=\"tool_","\" class",$m);
 			$enabled=$this->getContent("class=\"tool ","row",$m);
 						
-			$data[]=array("announcement"=>array(
+			$data[]=array("tool"=>array(
 											"name"		=>$name,
 											"enabled"	=>$enabled==""?1:0,
 			));
