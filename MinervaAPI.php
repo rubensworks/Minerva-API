@@ -17,6 +17,7 @@ class Minerva
 						"announcements"			=>	"https://minerva.ugent.be/main/announcements/announcements.php?cidReq=",
 						"announcementsPerPage"	=>	"&per_page=",
 						"announcementsPageNr"	=>	"&page_nr=",
+						"feedBaseUrl"			=>	"http://minerva.ugent.be/plugin/rsscreator/index.php?",
 						);
 	
 	public $username;
@@ -158,12 +159,17 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 	 *	Fetch the courses
 	 */
 	public function fetchCourses() {
-		preg_match_all("/http:\/\/minerva.ugent.be\/main\/course_home\/course_home.php\?cidReq=[^\"]*\"\>[^<]*\</",$this->getPage($this->urls["home"]),$matches);
+		//preg_match_all("/http:\/\/minerva.ugent.be\/main\/course_home\/course_home.php\?cidReq=[^\"]*\"\>[^<]*\</",$this->getPage($this->urls["home"]),$matches);
+		preg_match_all("/<div id=\"[^\"]*\" class=\"course [^\"]*\"..*<\/div\>[^<]*<div style=\"clear:both;\"\>/",$this->getPage($this->urls["home"]),$matches);
 		$data=array();
 		foreach ($matches[0] as $k=>$m) {
-			$e=explode("\">",$m);
+			$a=$this->getContent("<a","</a>",$m);
+			
+			$e=explode("\">",$a);
 			$cid=explode("?cidReq=",$e[0]);
-			$data[$k]=array("course"=>array("cid"=>$cid[1],"name"=>substr_replace($e[1],"",-1)));
+			
+			//$tutor=$this->getContent(") - ","\"",$m);
+			$data[$k]=array("course"=>array("cid"=>$cid[1],"name"=>$e[1],"tutor"=>$tutor));
 		}
 		$this->courses=$data;
 	}
@@ -247,18 +253,6 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 			$this->init();
 		return array("userLanguage"=>$this->lang);
 	}
-
-	
-	/**
-	 *	Show the courses (array of array(cid,coursename))
-	 */
-	public function getCourses() {
-		if(!$this->inited)
-			$this->init();
-		if($this->singlemode)
-			$this->fetchCourses();
-		return array("courses"=>$this->courses);
-	}
 	
 	/**
 	 *	Get the tools of a course
@@ -288,6 +282,31 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 		//also return course intro
 		return array(	"intro"=>$intro,
 						"tools"=>$data,
+						);
+	}
+
+	
+	/**
+	 *	Show the courses (array of array(cid,coursename))
+	 */
+	public function getCourses() {
+		if(!$this->inited)
+			$this->init();
+		if($this->singlemode)
+			$this->fetchCourses();
+		return array("courses"=>$this->courses);
+	}
+	
+	/**
+	 *	Get the rss-feed of announcements
+	 */
+	public function getFeed() {
+		if(!$this->inited)
+			$this->init();
+		$c=$this->getPage($this->urls["home"]);
+		$url=$this->urls["feedBaseUrl"].$this->getContent($this->urls["feedBaseUrl"],"\"",$c);
+		
+		return array(	"feed"=>$url,
 						);
 	}
 	
