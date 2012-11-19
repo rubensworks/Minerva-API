@@ -391,12 +391,15 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 			$id=$this->getContent("name=\"id[]\" value=\"","\" class=\"announcement_actions\" onclick=\"unlockmultipleactions('id[]');\">",$m);
 			$title=$this->getContent("\" class=\"announcement_actions\" onclick=\"unlockmultipleactions('id[]');\">","</div>",$m);
 			
+			//<img src="http://minerva.ugent.be/main/img/email.png" alt="Email" title="Email"   />
 			$mailed=str_replace("<img src=\"http://minerva.ugent.be/main/img/email.png\" alt=\"Email\" title=\"Email\"   />","",$title);
 			if($title==$mailed) {
-				$title=$mailed;
 				$mailed=false;
 			}
-			else $mailed=true;
+			else {
+				$title=$mailed;
+				$mailed=true;
+			}
 			
 			$visibility=$this->getContent(" <select name=\"sent to\"><option value=\"\">","</option></select>",$m);
 			$created=$this->getContent("</option></select><span class=\"right invisible\">","<br /></span></div><div class=\"visible\">",$m);
