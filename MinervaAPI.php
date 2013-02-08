@@ -169,6 +169,7 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 			$cid=explode("?cidReq=",$e[0]);
 			
 			//$tutor=$this->getContent(") - ","\"",$m);
+			$tutor="";
 			$data[$k]=array("course"=>array("cid"=>$cid[1],"name"=>$e[1],"tutor"=>$tutor));
 		}
 		$this->courses=$data;
@@ -277,10 +278,10 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 			));
 		}
 		
-		$intro=$this->getContent("<div id=\"courseintro\">","</div>",$c);
+		//$intro=$this->getContent("<div id=\"courseintro\">","</div>",$c);
 		
 		//also return course intro
-		return array(	"intro"=>$intro,
+		return array(	//"intro"=>$intro,
 						"tools"=>$data,
 						);
 	}
