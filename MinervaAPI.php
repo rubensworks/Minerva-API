@@ -383,8 +383,8 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 		if(!$this->inited)
 			$this->init();
 		$c=$this->getPage($this->urls["announcements"].$cid.$this->urls["announcementsPageNr"].$page.$this->urls["announcementsPerPage"].$perpage);
-		preg_match("/\<form action=\"announcements.php\?per_page=$perpage&page_nr=$page\" method=\"post\">(.*)<\/form>/msU",$c,$match);
-		preg_match_all("/<div class=\"announcement \">(.*)<\/div><\/div>/msU",$match[0],$matches);
+		preg_match("/\<form action=\"announcements.php\?per_page=$perpage&page_nr=$page\" method=\"post\" id=\"announcementlist\">(.*)<\/form>/msU",$c,$match);
+		preg_match_all("/<div id=\"[^\"]*\" class=\"announcement \">(.*)<\/div><\/div>/msU",$match[0],$matches);
 		
 		$data=array();
 		
