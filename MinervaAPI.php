@@ -393,7 +393,7 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 			$title=$this->getContent("\" class=\"announcement_actions\" onclick=\"unlockmultipleactions('id[]');\">","</div>",$m);
 			
 			//<img src="http://minerva.ugent.be/main/img/email.png" alt="Email" title="Email"   />
-			$mailed=str_replace("<img src=\"http://minerva.ugent.be/main/img/email.png\" alt=\"Email\" title=\"Email\"   />","",$title);
+			$mailed=str_replace("<img src=\"https://minerva.ugent.be/main/img/email.png\" alt=\"Email\" title=\"Email\"   />","",$title);
 			if($title==$mailed) {
 				$mailed=false;
 			}
