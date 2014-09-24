@@ -160,7 +160,8 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 	 */
 	public function fetchCourses() {
 		//preg_match_all("/http:\/\/minerva.ugent.be\/main\/course_home\/course_home.php\?cidReq=[^\"]*\"\>[^<]*\</",$this->getPage($this->urls["home"]),$matches);
-		preg_match_all("/<div id=\"[^\"]*\" class=\"course [^\"]*\"..*<\/div\>[^<]*<div style=\"clear:both;\"\>/",$this->getPage($this->urls["home"]),$matches);
+		//preg_match_all("/<div id=\"[^\"]*\" class=\"course [^\"]*\"..*<\/div\>[^<]*<div style=\"clear:both;\"\>/",$this->getPage($this->urls["home"]),$matches);
+        preg_match_all("/<div id=\"[^\"]*\" class=\"course [^\"]*\".*/",$this->getPage($this->urls["home"]),$matches);//<div class=\"right \" style=\"text-align: right\">
 		$data=array();
 		foreach ($matches[0] as $k=>$m) {
 			$a=$this->getContent("<a","</a>",$m);
@@ -337,7 +338,7 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 				$lines=explode("\n",$m);
 				
 				$ns1=explode("<td><img src=\"../img/",$lines[1]);
-				$ns2=explode(".gif\"",$ns1[1]);
+				$ns2=explode(".png\"",$ns1[1]);
 				$type=$ns2[0];
 				
 				$n1=explode("<span><a href=\"",$lines[2]);
@@ -349,9 +350,12 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 				$id=$n3[0];
 				$n4=explode("</a>",$n3[1]);
 				$name=$n4[0];
-				$n5=explode("<a href=\"",$n3[2]);
-				$n6=explode("\"",$n5[1]);
-				$download=$n6[0];
+                $download="";
+                if(array_key_exists(2, $n3)) {
+				    $n5=explode("<a href=\"",$n3[2]);
+				    $n6=explode("\"",$n5[1]);
+				    $download=$n6[0];
+                }
 				
 				$ns1=explode("<td style=\"text-align:center;\">",$lines[5]);
 				$ns2=explode("</td>",$ns1[1]);
@@ -404,7 +408,7 @@ minerva.ugent.be	FALSE	/	FALSE	0	mnrv_username	$username");
 			
 			$visibility=$this->getContent(" <select name=\"sent to\"><option value=\"\">","</option></select>",$m);
 			$created=$this->getContent("</option></select><span class=\"right invisible\">","<br /></span></div><div class=\"visible\">",$m);
-			$content=$this->getContent("<br /></span></div><div class=\"visible\">","</div></div>",$m);
+			$content=$this->getContent("</span></div><div class=\"visible\">","</div></div>",$m);
 			
 			$data[]=array("announcement"=>array(
 											"id"			=>$id,
